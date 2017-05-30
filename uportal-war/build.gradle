@@ -1,57 +1,9 @@
-description = "Apereo uPortal $version"
+description = "Apereo uPortal War"
 
-// Build Scans provide detailed information about many aspects of your
-// build right in your browser.  (https://scans.gradle.com/plugin)
-apply plugin: 'com.gradle.build-scan'
-
-// Adds support for Node.js scripts
-apply plugin: 'com.moowork.node'
-apply plugin: 'com.wiredforcode.spawn'
-apply plugin: 'java'
-
-//NOTE: The startHsql task can be executed after ant initportal because it uses hsqldb-2.3.2.jar in classpath, otherwise it will fail 
-task startHsql(type: SpawnProcessTask) {
-	def cmd = "java -cp ./uportal-war/target/uPortal/WEB-INF/lib/hsqldb-2.3.2.jar org.hsqldb.server.Server --database.0 file:./data/uPortal;hsqldb.tx=mvcc --dbname.0 uPortal --address localhost --port 8887"
-	command cmd
-	ready 'Started Application'
-}
-task stopHsql(type: KillProcessTask)
-task upShell(type:JavaExec) {
-    def uportalWar = "/home/stalele/uportal/uPortal/uportal-war/target/uPortal-classes.jar"
-	//if(skipUpShellExecution) {
-	
-	description='Run a uPortal Groovy Shell. scripted using -Dscript='
-    main = 'org.apereo.portal.shell.PortalShell'
-     classpath = sourceSets.main.runtimeClasspath += files(uportalWar)
-    // jvmArgs '-XX:MaxPermSize=256m'
-     systemProperty 'java.awt.headless', 'true'
-     systemProperty 'logback.configurationFile','command-line.logback.xml'
-    args 'script'
-   // }
-}
-
-task upShellSpawn(type: SpawnProcessTask) {
-	def cmd = "java -cp /home/stalele/uportal/uPortal/uportal-war/target/uPortal-classes.jar org.apereo.portal.shell.PortalShell script"
-	command cmd
-	ready 'Started Application'
-}
-
-
-import com.wiredforcode.gradle.spawn.*
-
-repositories {
-    // Use jcenter for resolving your dependencies.
-    // You can declare any Maven/Ivy/file repository here.
-   // jcenter()
-    mavenCentral()
-    mavenLocal()
-}
-
-task allDeps(type: DependencyReportTask) {}
 dependencies {
-// https://mvnrepository.com/artifact/org.hsqldb/hsqldb
-	//compile group: 'org.hsqldb', name: 'hsqldb', version: '5.0.0-SNAPSHOT'
-	/*def springVersion = "4.3.2.RELEASE"
+   // compile project(':uPortal-groups:uPortal-groups-core')
+   // compile project(':uPortal-portlet')
+    def springVersion = "4.3.2.RELEASE"
 	compile "org.antlr:stringtemplate:4.0.2"
 	compile "aopalliance:aopalliance:1.0"
 	
@@ -273,88 +225,26 @@ dependencies {
 	//compile "org.hibernate.javax.persistence:hibernate-jpa-2.0-api:1.0.1.Final"
 	compile "oro:oro:2.0.8"
 	compile "taglibs:standard:1.1.2"
-	compile "xmlunit:xmlunit:1.5"*/
-	//exclude ("javax.xml:xmldsig:1.0")
-	compile project(':uPortal-security')
+	compile "xmlunit:xmlunit:1.5"
+	compile "org.jasig.portal:uPortal-soffit-connector:*"
+	compile project(':uPortal-core')
+	compile project(':uPortal-concurrency')
+	//compile project(':uPortal-groups-core')
+	//compile project(':uPortal-groups-filesystem')
+	//compile project(':uportal-groups-grouper')
+	//compile project(':uPortal-groups-ldap')
+	//compile project(':uPortal-groups-local')
+	//compile project(':uPortal-groups-pags')
+	//compile project(':uPortal-groups-smartldap')
+	//compile project(':uportal-io')
 	compile project(':uPortal-layout')
-	compile project(':uPortal-url')
-	compile project(':uportal-platform-api')
+	compile project(':uPortal-portlet')
+	//compile project(':uportal-rdbm')
+	compile project(':uPortal-security')
+	//compile project(':uPortal-soffit-connector')
+	
+//	compile project(':uportal-url')
 	compile project(':uPortal-utils')
+//	compile project(':uPortal-platform-api')
 	compile project(':uPortal-search-api')
-	//compile "org.jasig.cas:cas-server-extension-clearpass:*"
-	//compile "org.jasig.cas.client:cas-client-support-distributed-ehcache:3.4.1"
-}    
-   sourceSets {
-    main {
-   // println "jar file set is " +jarfile
-        runtimeClasspath += files("/home/stalele/uportal/uPortal/uportal-war/target/uPortal-classes.jar")
-    }
-
-}
-
-buildscript {
-    repositories {
-        maven {
-            url 'https://plugins.gradle.org/m2/'
-        }
-        maven { url 'http://dl.bintray.com/vermeulen-mp/gradle-plugins' }
-        mavenLocal()
-    }
-    dependencies {
-        classpath 'com.gradle:build-scan-plugin:1.0'
-        classpath "com.moowork.gradle:gradle-node-plugin:0.13"
-        classpath 'gradle.plugin.com.github.sherter.google-java-format:google-java-format-gradle-plugin:0.6'
-        classpath 'com.wiredforcode:gradle-spawn-plugin:0.6.0'
-    }
-}
-
-node {
-    // Version of node to use.
-    version = '6.9.1'
-
-    // If true, it will download node using above parameters.
-    // If false, it will try to use globally installed node.
-    download = true
-}
-
-buildScan {
-    licenseAgreementUrl = 'https://gradle.com/terms-of-service'
-    licenseAgree = 'yes'
-}
-
-subprojects {
-    apply plugin: 'findbugs'
-    apply plugin: 'idea'
-    apply plugin: 'java'
-    apply plugin: 'maven'
-    apply plugin: 'com.github.sherter.google-java-format'
-
-    repositories {
-        mavenLocal()
-        mavenCentral()
-    }
-
-    findbugs {
-        toolVersion = '3.0.1'
-        ignoreFailures = true
-    }
-
-    googleJavaFormat {
-        toolVersion '1.3'
-        options style: 'AOSP'
-    }
-
-    configurations {
-        /*
-         * Defines a 'provided' scope similar to the one in Maven.  Dependencies
-         * defined using provided will not become transitive dependencies.
-         */
-        provided
-
-        /*
-         * Makes provided dependencies available on the compile classpath in a way
-         * that works both from the command line and in Buildship.
-         */
-        compile.extendsFrom provided
-    }
 }

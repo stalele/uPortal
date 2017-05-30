@@ -1,0 +1,2 @@
+description = "Apereo uPortal Search Api"
+apply plugin:'java'
