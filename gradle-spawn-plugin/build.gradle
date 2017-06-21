@@ -1,0 +1,102 @@
+plugins {
+  id "com.gradle.plugin-publish" version "0.9.5"
+}
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    compile gradleApi()
+    compile localGroovy()
+    testCompile ("org.spockframework:spock-core:1.0-groovy-2.4"){
+        exclude module: 'groovy-all'
+    }
+}
+
+group = 'com.wiredforcode'
+archivesBaseName = 'gradle-spawn-plugin'
+version = '0.8.0'
+
+apply plugin: 'idea'
+apply plugin: 'groovy'
+apply plugin: 'distribution'
+apply plugin: 'maven-publish'
+
+distributions {
+    main {
+        baseName = archivesBaseName
+        contents {
+            from { libsDir }
+        }
+    }
+}
+
+ext {
+    bintrayBaseUrl = 'https://api.bintray.com/maven'
+    bintrayUsername = 'vermeulen-mp'
+    bintrayRepository = 'gradle-plugins'
+    bintrayPackage = 'gradle-spawn-plugin'
+}
+
+task sourceJar(type: Jar) {
+   from sourceSets.main.allSource
+   classifier = 'source'
+}
+
+publishing {
+    publications {
+        plugin(MavenPublication) {
+            from components.java
+
+            artifact sourceJar {
+                classifier "sources"
+            }
+
+            pom.withXml {
+                def root = asNode()
+                root.appendNode('name', 'Gradle Spawn plugin')
+                root.appendNode('description', 'Gradle plugin for spawning and killing command line processes.')
+                root.appendNode('inceptionYear', '2014')
+
+                def license = root.appendNode('licenses').appendNode('license')
+                license.appendNode('name', 'The Apache Software License, Version 2.0')
+                license.appendNode('url', 'http://www.apache.org/licenses/LICENSE-2.0.txt')
+                license.appendNode('distribution', 'repo')
+
+                def developer = root.appendNode('developers').appendNode('developer')
+                developer.appendNode('id', 'vermeulen.mp')
+                developer.appendNode('name', 'Marco Vermeulen')
+                developer.appendNode('email', 'vermeulen.mp@gmail.com')
+            }
+
+        }
+    }
+
+    repositories {
+        maven {
+            name 'Bintray'
+            url "$bintrayBaseUrl/$bintrayUsername/$bintrayRepository/$bintrayPackage"
+
+            credentials {
+                username = System.getenv('BINTRAY_USERNAME') ?: 'invalid_user'
+                password = System.getenv('BINTRAY_API_KEY') ?: 'invalid_key'
+            }
+        }
+        mavenLocal()
+    }
+}
+
+pluginBundle {
+  website = 'http://wiredforcode.com'
+  vcsUrl = 'https://github.com/marc0der/gradle'
+  description = 'This plugin is used for starting and stopping UNIX command line processes from within your build.'
+  tags = ['spawn', 'unix', 'process']
+
+  plugins {
+    spawnPlugin {
+      id = 'com.wiredforcode.spawn'
+      displayName = 'Gradle Spawn Plugin'
+    }
+  }
+}
